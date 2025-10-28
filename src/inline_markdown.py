@@ -1,5 +1,23 @@
 import re
 from textnode import TextNode, TextType
+from enum import Enum
+
+class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    OLIST = "ordered_list"
+    ULIST = "unordered_list"
+
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.TEXT)]
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    nodes = split_nodes_link(nodes)
+    nodes = split_nodes_image(nodes)
+    return nodes
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_node = []
@@ -79,4 +97,3 @@ def split_nodes_link(old_nodes):
         if original_text != "":
             new_nodes.append(TextNode(original_text, TextType.TEXT))
     return new_nodes
-                    
