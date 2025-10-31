@@ -1,4 +1,5 @@
 from enum import Enum
+
 from htmlnode import ParentNode
 from inline_markdown import text_to_textnodes
 from textnode import text_node_to_html_node, TextNode, TextType
@@ -31,9 +32,10 @@ def block_to_block_type(block):
         return BlockType.HEADING
     if first.startswith("```") and last == "```":
         return BlockType.CODE
-    if block.startswith("> "):
+    if block.startswith(">"):
         for line in lines:
-            if not line.startswith("> "):
+            strip_line = line.lstrip()
+            if not strip_line.startswith(">"):
                 return BlockType.PARAGRAPH
         return BlockType.QUOTE
     if block.startswith("- "):
@@ -51,9 +53,21 @@ def block_to_block_type(block):
     return BlockType.PARAGRAPH
 
 
-
-
 def markdown_to_html_node(markdown):
+    """
+    Convert a markdown string to an HTML node structure.
+    
+    This function takes a markdown string, splits it into blocks, converts each
+    block to its corresponding HTML node representation, and wraps all the
+    resulting nodes in a parent div element.
+    
+    Args:
+        markdown (str): The markdown string to convert to HTML nodes.
+        
+    Returns:
+        ParentNode: A ParentNode object with tag "div" containing all the
+                converted markdown blocks as child HTML nodes.
+    """
     blocks = markdown_to_blocks(markdown)
     children = []
     for block in blocks:
@@ -112,9 +126,13 @@ def quote_to_html_node(block):
     lines = block.split("\n")
     new_lines = []
     for line in lines:
-        if not line.startswith(">"):
+        strip_line = line.lstrip()
+        if not strip_line.startswith(">"):
             raise ValueError("invalid quote block")
-        new_lines.append(line.lstrip(">").strip())
+        text = strip_line.lstrip(">").strip()
+        if text == "":
+            continue
+        new_lines.append(strip_line.lstrip(">").strip())
     content = " ".join(new_lines)
     children = text_to_children(content)
     return ParentNode("blockquote", children)

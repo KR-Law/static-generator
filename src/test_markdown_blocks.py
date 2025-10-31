@@ -163,5 +163,23 @@ the **same** even with inline stuff
             "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
 
+    def test_blockquote_with_empty_line(self):
+        md = """
+    > "I am in fact a Hobbit in all but size."
+    >
+    > -- J.R.R. Tolkien
+    """
+        
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            '<div><blockquote>"I am in fact a Hobbit in all but size." -- J.R.R. Tolkien</blockquote></div>',
+        )
+
+    def test_block_type_quote_with_empty_line(self):
+        # This is what the block should look like after markdown_to_blocks
+        block = '> "I am in fact a Hobbit in all but size."\n>\n> -- J.R.R. Tolkien'
+        self.assertEqual(block_to_block_type(block), BlockType.QUOTE)
 if __name__ == "__main__":
     unittest.main()
