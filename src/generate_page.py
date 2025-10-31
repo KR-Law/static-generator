@@ -35,7 +35,7 @@ def write_file(path, content):
         print(f"An unexpected I/O error occurred while reading: {e}")
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, base_path):
     """
     Generate an HTML page from a markdown file using a template.
     
@@ -67,25 +67,27 @@ def generate_page(from_path, template_path, dest_path):
 
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     markdown = read_file(from_path)
-    template = read_file(template_path)
+    html = read_file(template_path)
     node = markdown_to_html_node(markdown)
     content = node.to_html()
     title = extract_title(markdown)
-    template = template.replace("{{ Title }}", title)
-    template = template.replace("{{ Content }}", content)
+    html = html.replace("{{ Title }}", title)
+    html = html.replace("{{ Content }}", content)
+    html = html.replace('href="/', f'href="{base_path}')
+    html = html.replace('src="/', f'src="{base_path}')
     dest_dir = os.path.dirname(dest_path)
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir, exist_ok=True)
-    write_file(dest_path, template)
+    write_file(dest_path, html)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, base_path):
     print(f"Analyzing {dir_path_content}")
     if os.path.isfile(dir_path_content):
         if dir_path_content.lower().endswith(".md"):
             html_name = os.path.splitext(os.path.basename(dir_path_content))[0] + ".html"
             print(f"Calling generate page on {src} to {html_name}")
-            generate_page(dir_path_content, template_path, html_name)
+            generate_page(dir_path_content, template_path, html_name, base_path)
         return
 
     # it's a directory
@@ -94,10 +96,9 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
     for name in os.listdir(dir_path_content):
         src = os.path.join(dir_path_content, name)
         if os.path.isdir(src):
-            generate_pages_recursive(src, template_path, os.path.join(dest_dir_path, name))
+            generate_pages_recursive(src, template_path, os.path.join(dest_dir_path, name), base_path)
         elif src.lower().endswith(".md"):
-            print("isdir")
             html_name = os.path.splitext(os.path.basename(src))[0] + ".html"
             dest_path = os.path.join(dest_dir_path, html_name)
             print(f"Calling generate page on {src} to {dest_path}")
-            generate_page(src, template_path, dest_path)
+            generate_page(src, template_path, dest_path, base_path)
